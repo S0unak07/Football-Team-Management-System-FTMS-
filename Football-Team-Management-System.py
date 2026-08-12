@@ -135,10 +135,17 @@ def search_player(show_finance=False):
         print("Invalid field")
         return
     search = input("Search: ").strip()
-    if show_finance:
-        query = f"SELECT * FROM player_details WHERE {field} = %s"
+
+    if field == 'name':
+        query_condition = f"{field} LIKE %s"
+        search = f"%{search}%"
     else:
-        query = f"SELECT player_id, name, position, nationality, jersey_no, availability, previous_club, date_of_signing, contract_expiration, age FROM player_details WHERE {field} = %s"    
+        query_condition = f"{field} = %s"
+
+    if show_finance:
+        query = f"SELECT * FROM player_details WHERE {query_condition}"
+    else:
+        query = f"SELECT player_id, name, position, nationality, jersey_no, availability, previous_club, date_of_signing, contract_expiration, age FROM player_details WHERE {query_condition}"
     cols, rows = make_selection(query, (search,))
     if not rows:
         print("Player not found.")
@@ -235,7 +242,7 @@ def view_upcoming_matches():
 #-------------------------#
 
 def assign_training():
-    print("\n--- Tranining Assignment ---\n")
+    print("\n--- Training Assignment ---\n")
     training_id = input('Enter Training ID: ').strip()
     player_id = input("Player ID to assign: ").strip()
     date = input("Date (YYYY-MM-DD): ").strip()
@@ -253,7 +260,7 @@ def assign_training():
     try:
         datetime.strptime(date, "%Y-%m-%d") #Parse as date only if 'date' is in YYYY-MM-DD format
     except ValueError: #Date in not in YYYY-MM-DD format
-        print("Unable to assign training. Invaid Date for Format")
+        print("Unable to assign training. Invalid Date for Format")
         print("Date format must be YYYY-MM-DD for successful entry")
         return
     make_entry("INSERT INTO training_schedule VALUES (%s,%s,%s,%s,%s)",(training_id, player_id, date, session_type, notes))
@@ -261,7 +268,7 @@ def assign_training():
 
 
 def update_training():
-    print("\n--- Tranining Update ---\n")
+    print("\n--- Training Update ---\n")
     training_id = input("Training ID to update: ").strip()
     if not make_selection("SELECT training_id FROM training_schedule WHERE training_id = %s", (training_id,))[1]:
         print("No training with Training ID", training_id)
@@ -276,11 +283,11 @@ def update_training():
         try:
             datetime.strptime(val, "%Y-%m-%d")
         except ValueError:
-            print("Unable to update training. Invaid Date for Format")
+            print("Unable to update training. Invalid Date for Format")
             print("Date format must be YYYY-MM-DD for successful entry")
             return    
     make_entry(f"UPDATE training_schedule SET {field} = %s WHERE training_id = %s", (val, training_id))
-    print("Traning updated for Training ID",training_id)    
+    print("Training updated for Training ID",training_id)
 
 def record_injury():
     print("\n--- Injury Record ---\n")
@@ -303,7 +310,7 @@ def record_injury():
         datetime.strptime(injury_date, "%Y-%m-%d")
         datetime.strptime(exp_recovery, "%Y-%m-%d")
     except ValueError:
-        print("Unable to log injury. Invaid Date for Format")
+        print("Unable to log injury. Invalid Date for Format")
         print("Date format must be YYYY-MM-DD for successful entry")
         return      
     if severity not in ('Low','Moderate','High'): #Check for valid severity
@@ -417,7 +424,7 @@ def add_new_player():
             datetime.strptime(date_of_signing, "%Y-%m-%d")
             datetime.strptime(contract_expiration, "%Y-%m-%d")
     except ValueError:
-            print("Unable to add player. Invaid Date for Format")
+            print("Unable to add player. Invalid Date for Format")
             print("Date format must be YYYY-MM-DD for successful entry")
             return
     make_entry("INSERT INTO player_details VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
@@ -460,7 +467,7 @@ def contract_renewal():
     try:
             datetime.strptime(expiry, "%Y-%m-%d")
     except ValueError:
-            print("Unable to update contarct. Invaid Date Format")
+            print("Unable to update contract. Invalid Date Format")
             print("Date format must be YYYY-MM-DD for successful entry")
             return
 
@@ -482,7 +489,7 @@ def suspend_player():
             suspended_on = input("Suspended on: ")
             datetime.strptime(suspended_on, "%Y-%m-%d")
     except ValueError:
-            print("Unable to suspend player. Invaid Date Format")
+            print("Unable to suspend player. Invalid Date Format")
             print("Date format must be YYYY-MM-DD for successful entry")
             return
     try:
@@ -498,8 +505,11 @@ def suspend_player():
 
 def unsuspend_player():
     pid = input("Player ID to unsuspend: ").strip()
+    if not make_selection("SELECT player_id FROM player_details WHERE player_id = %s", (pid,))[1]:
+        print("No player with Player ID ",pid)
+        return
     make_entry("UPDATE player_details SET availability = %s WHERE player_id = %s", ('Available', pid))
-    print("Player unsuspend.")
+    print("Player unsuspended.")
 
 def record_club_revenue():
     print("\n--- Record Club Revenue ---\n")
@@ -517,7 +527,7 @@ def record_club_revenue():
     try:
             datetime.strptime(revenue_date, "%Y-%m-%d")
     except ValueError:
-            print("Unable to record revenue. Invaid Date Format")
+            print("Unable to record revenue. Invalid Date Format")
             print("Date format must be YYYY-MM-DD for successful entry")
             return
     description = input("Description (optional): ").strip() 
@@ -541,7 +551,7 @@ def record_club_expense():
     try:
             datetime.strptime(expense_date, "%Y-%m-%d")
     except ValueError:
-            print("Unable to record expense. Invaid Date Format")
+            print("Unable to record expense. Invalid Date Format")
             print("Date format must be YYYY-MM-DD for successful entry")
             return
     description = input("Description (optional): ").strip() 
@@ -566,8 +576,9 @@ def add_new_sponsorship():
             datetime.strptime(start_year, "%Y-%m-%d")
             datetime.strptime(end_year, "%Y-%m-%d")
     except ValueError:
-            print("Unable to record sponsor. Invaid Date Format")
+            print("Unable to record sponsor. Invalid Date Format")
             print("Date format must be YYYY-MM-DD for successful entry")
+            return
             
     make_entry("INSERT INTO club_sponsors VALUES (%s, %s, %s, %s, %s)",(sponsor_id, name, contribution, start_year, end_year))             
     print("New sponsorship added successfully.")
@@ -635,7 +646,7 @@ def export_all_tables():
 def import_from_csv():
     table = input("Table name to restore: ").strip()
     if (table,) not in make_selection("SHOW TABLES")[1]:
-        print('Table "{table}" does not exist')
+        print(f'Table "{table}" does not exist')
         return
     column, row = make_selection(f"SELECT * FROM {table}")
     if not column:
@@ -677,7 +688,7 @@ def update_auth_data():
     value = input (f"New value for {field.title()}: ")
     
     if field == 'role' and value not in ['Player', 'Coaching Staff', 'Manager', 'Developer']:
-        print("Invalid Role. Updatation Cancelled.")
+        print("Invalid Role. Update Cancelled.")
         print("Try choosing (Player / Coaching Staff / Manager / Developer) for Role.")
         return
 
@@ -732,7 +743,8 @@ def add_fixture():
         return
     opponent = input("Opponent name: ").strip()
     mdate = input("Match date (YYYY-MM-DD): ").strip()
-    mtime = input("Match time (HH:MM:SS) optional: ").strip() 
+    mtime = input("Match time (HH:MM:SS) optional: ").strip()
+    mtime = mtime if mtime else None
     venue = input("Venue: ").strip() 
     tournament = input("Tournament: ").strip() 
     status = input("Status (Upcoming/Completed/Postponed): ").strip().title() or 'Upcoming'
