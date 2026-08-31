@@ -1,4 +1,5 @@
 import mysql.connector as sqlconn
+from mysql.connector import pooling
 import sys
 import csv
 import os
@@ -9,13 +10,23 @@ import time
 #------------------#
 #    CONNECTION    #
 #------------------#
+try:
+    db_pool = pooling.MySQLConnectionPool(
+        pool_name="ftm_pool",
+        pool_size=5,
+        host='localhost',
+        user='root',
+        passwd='0987',
+        database='ftm_system'
+    )
+except sqlconn.Error as e:
+    print("Database pool initialization Error", e)
+    print("Exiting...")
+    sys.exit(0)
+
 def make_connection():
     try:
-        conn = sqlconn.connect(
-            host = 'localhost',
-            user = 'root',
-            passwd = '0987',
-            database = 'ftm_system')
+        conn = db_pool.get_connection()
         return conn
     except sqlconn.Error as e:
         print("Database connection Error", e)
