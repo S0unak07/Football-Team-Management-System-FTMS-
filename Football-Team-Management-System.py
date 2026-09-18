@@ -4,7 +4,6 @@ import csv
 import os
 from prettytable import PrettyTable
 from datetime import datetime
-import time
 
 #------------------#
 #    CONNECTION    #
