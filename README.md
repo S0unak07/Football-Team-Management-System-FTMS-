@@ -118,22 +118,20 @@ mysql -u root -p < ftm_system.sql
 
 ## 🔧 Configuration
 
-**Important:** You must update the Python script to match your local MySQL credentials.
+The application configures its database connection using environment variables. Set the following environment variables according to your MySQL database configuration:
 
-1. Open `Football-Team-Management-System.py`.
-2. Locate the `make_connection()` function (approx. line 12).
-3. Update the `user` and `passwd` fields:
+* `DB_HOST`: Hostname of the MySQL server (default: `localhost`)
+* `DB_USER`: Username for MySQL connection (default: `root`)
+* `DB_PASSWORD`: Password for MySQL connection (default: `""`)
+* `DB_NAME`: Database name (default: `ftm_system`)
 
-```python
-def make_connection():
-    try:
-        conn = sqlconn.connect(
-            host = 'localhost',
-            user = 'YOUR_MYSQL_USERNAME',  # e.g., 'root'
-            passwd = 'YOUR_MYSQL_PASSWORD', # e.g., 'password123'
-            database = 'ftm_system')
-        return conn
+Example:
 
+```bash
+export DB_HOST="localhost"
+export DB_USER="root"
+export DB_PASSWORD="your_password"
+export DB_NAME="ftm_system"
 ```
 
 ---

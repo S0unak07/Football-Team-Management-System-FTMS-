@@ -12,10 +12,10 @@ import time
 def make_connection():
     try:
         conn = sqlconn.connect(
-            host = 'localhost',
-            user = 'root',
-            passwd = '0987',
-            database = 'ftm_system')
+            host = os.getenv('DB_HOST', 'localhost'),
+            user = os.getenv('DB_USER', 'root'),
+            passwd = os.getenv('DB_PASSWORD', os.getenv('DB_PASSWD', '')),
+            database = os.getenv('DB_NAME', 'ftm_system'))
         return conn
     except sqlconn.Error as e:
         print("Database connection Error", e)
