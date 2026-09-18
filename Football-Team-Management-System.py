@@ -654,11 +654,13 @@ def import_from_csv():
 
             conn = make_connection()
             cursor = conn.cursor()
-            count = 0
-            for row in reader:
-                cursor.execute(f"INSERT INTO {table} ({cols}) VALUES ({placeholders})",
-                            tuple(None if c.strip() == '' else c for c in row)) #Converts blank cells '' to NULL
-                count += 1
+            rows_data = [
+                tuple(None if c.strip() == '' else c for c in row)
+                for row in reader
+            ]
+            if rows_data:
+                cursor.executemany(f"INSERT INTO {table} ({cols}) VALUES ({placeholders})", rows_data)
+            count = len(rows_data)
             conn.commit()
             cursor.close(); conn.close()
             print(f"Imported {count} rows into '{table}'.")
